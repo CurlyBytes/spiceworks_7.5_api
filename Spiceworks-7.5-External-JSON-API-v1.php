@@ -102,7 +102,7 @@ if($debugMode) {
 // If using only the original URL, you get some details and a redirect to /dashboard .
 // But when attempting to fetch /dashboard, you'll discover you have insufficient privileges.
 $curl = curl_init($url_root . 'pro_users/login');
-curl_setopt($curl, CURLOPT_POST, count($loginFields) + 1);
+curl_setopt($curl, CURLOPT_POST, 1);
 curl_setopt($curl, CURLOPT_POSTFIELDS, $fields_string);
 curl_setopt($curl, CURLOPT_REFERER, $url_root . 'login');
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
