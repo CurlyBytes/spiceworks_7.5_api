@@ -41,22 +41,22 @@
 
 
 
-//----------------------
-//Set the settings
+// ----------------------
+// Set the settings
 $username = 'spiceworks_user@example.com'; //Spiceworks username / email
 $password = 'PASSWORD-GOES-HERE'; //Spiceworks password
 $url_root = 'http://spiceworks.example.com/'; //Include a trailing slash
-$cookie_file = 'spicecookies.txt'; //cURL must be able to read and write to this file
+$cookie_file = 'spicecookies.txt'; //cURL must be able to read and write to this file; you might need to embed this in a subdirectory with enough privileges
 
 $debugMode = false; //Set to true to get outputs of all of the HTTP requests
 
-//Array of all the API calls to make. (no leading slash)
+// Array of all the API calls to make. (no leading slash)
 $api_call[] = 'api/alerts.json?filter=recent';
 $api_call[] = 'api/hotfixes.json';
 
 
 
-//We need to initiate a session and get the authenticity_token from the logon page before we can actually login.
+// We need to initiate a session and get the authenticity_token from the logon page before we can actually login.
 $curl = curl_init($url_root . 'login');
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($curl, CURLOPT_HEADER, true);
@@ -70,7 +70,7 @@ if($debugMode) {
 	echo "\n\n\n";
 }
 
-//Using two explode functions to get the authenticity_token from the page:
+// Using two explode functions to get the authenticity_token from the page:
 $authToken = explode('<input name="authenticity_token" type="hidden" value="', $loginPage);
 $authToken = explode('"', $authToken['1']);
 $authToken = $authToken['0'];
@@ -84,22 +84,24 @@ $loginFields = array(
 		'_pickaxe' => urlencode('⸕'), //This was included in the original login form, so I'm including it here.
 		// as of version 7.2.000519 the username and password fields have changed to pro_user 
 		'pro_user[email]' => urlencode($username),
-		'pro_user[password]' => urlencode($password),
-		'btn' => urlencode('login')
+		'pro_user[password]' => urlencode($password)
 	);
 
-//Transform the fields, ready for POST-ing
+// Transform the fields, ready for POST-ing
 foreach($loginFields as $key => $val) {
 	$fields_string .= $key.'='.$val.'&';
 }
-$fields_string .= 'btn=login'; //Original form has two btn=login inputs.
+$fields_string .= 'pro_user[remember_me]=0&pro_user[remember_me]=1'; //Original request has two remember_me fields?
 
 if($debugMode) {
 	echo "POST String: " . $fields_string . "\n\n\n";
 }
 
-//Initiate connection to Login page and send POST data
-$curl = curl_init($url_root . 'login');
+// Initiate connection to Login page and send POST data
+// Looks like this url changed a bit, from login to pro_users/login!
+// If using only the original URL, you get some details and a redirect to /dashboard .
+// But when attempting to fetch /dashboard, you'll discover you have insufficient privileges.
+$curl = curl_init($url_root . 'pro_users/login');
 curl_setopt($curl, CURLOPT_POST, count($loginFields) + 1);
 curl_setopt($curl, CURLOPT_POSTFIELDS, $fields_string);
 curl_setopt($curl, CURLOPT_REFERER, $url_root . 'login');
@@ -116,7 +118,7 @@ if($debugMode) {
 	echo "\n\n\n";
 }
 
-//Stores each API request in an array
+// Stores each API request in an array
 foreach($api_call as $api_url) {
 	$curl = curl_init($url_root . $api_url);
 	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
@@ -128,7 +130,7 @@ foreach($api_call as $api_url) {
 	curl_close($curl);
 }
 
-//Loops through every stored API request, decodes the JSON and outputs it to the browser.
+// Loops through every stored API request, decodes the JSON and outputs it to the browser.
 foreach($api_call_results as $key => $data) {
 	$api_call_results[$key]['data'] = json_decode($data['raw'], true);
 	print_r($api_call_results[$key]['data']);
