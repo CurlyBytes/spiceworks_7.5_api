@@ -45,19 +45,13 @@
 // Set the settings
 $username = 'spiceworks_user@example.com'; //Spiceworks username / email
 $password = 'PASSWORD-GOES-HERE'; //Spiceworks password
-$url_root = 'http://spiceworks.example.com/'; //Include a trailing slash
+$url_root = 'http://spiceworks.example.com'; //Include a trailing slash
 $cookie_file = 'spicecookies.txt'; //cURL must be able to read and write to this file; you might need to embed this in a subdirectory with enough privileges
 
 $debugMode = false; //Set to true to get outputs of all of the HTTP requests
 
-// Array of all the API calls to make. (no leading slash)
-$api_call[] = 'api/alerts.json?filter=recent';
-$api_call[] = 'api/hotfixes.json';
-
-
-
 // We need to initiate a session and get the authenticity_token from the logon page before we can actually login.
-$curl = curl_init($url_root . 'login');
+$curl = curl_init($url_root . '/login');
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($curl, CURLOPT_HEADER, true);
 curl_setopt($curl, CURLOPT_COOKIEJAR, $cookie_file);
@@ -101,7 +95,7 @@ if($debugMode) {
 // Looks like this url changed a bit, from login to pro_users/login!
 // If using only the original URL, you get some details and a redirect to /dashboard .
 // But when attempting to fetch /dashboard, you'll discover you have insufficient privileges.
-$curl = curl_init($url_root . 'pro_users/login');
+$curl = curl_init($url_root . '/pro_users/login');
 curl_setopt($curl, CURLOPT_POST, 1);
 curl_setopt($curl, CURLOPT_POSTFIELDS, $fields_string);
 curl_setopt($curl, CURLOPT_REFERER, $url_root . 'login');
@@ -110,7 +104,7 @@ curl_setopt($curl, CURLOPT_HEADER, true);
 curl_setopt($curl, CURLOPT_COOKIEFILE, $cookie_file); //These two options ensure the cookies are both read and written.
 curl_setopt($curl, CURLOPT_COOKIEJAR, $cookie_file);
 $loginProcessPage = curl_exec($curl);
-curl_close($curl);
+
 
 if($debugMode) {
 	echo "Login process page: (posts all of the login fields and saves the cookies)\n";
@@ -118,22 +112,16 @@ if($debugMode) {
 	echo "\n\n\n";
 }
 
-// Stores each API request in an array
-foreach($api_call as $api_url) {
-	$curl = curl_init($url_root . $api_url);
-	curl_setopt($curl, CURLOPT_RETURNTRANSFER, true); 
-	curl_setopt($curl, CURLOPT_COOKIEFILE, $cookie_file); 
-	$api_call_results[] = array(
-		'url' => $api_url,
-		'raw' => curl_exec($curl)
-	);
-	curl_close($curl);
-}
+// Do requests, as GET
+// Inspiration: https://community.spiceworks.com/support/desktop/docs/data-api
+// and https://mediarealm.com.au/articles/spiceworks-external-json-api-getting-started/
+curl_setop($curl, CURLOPT_URL, $url_root . 'api/devices.json?hostname=your-pc-name);
 
-// Loops through every stored API request, decodes the JSON and outputs it to the browser.
-foreach($api_call_results as $key => $data) {
-	$api_call_results[$key]['data'] = json_decode($data['raw'], true);
-	print_r($api_call_results[$key]['data']);
-}
+// Do something with this data
+$data = json_decode( curl_exec($curl), true );
+
+
+// Close
+curl_close($curl);
 
 ?>
