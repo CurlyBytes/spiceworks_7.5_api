@@ -1,3 +1,8 @@
+This repository contains some changes to make the login procedure work again on the latest SpiceWorks 7.5 versions (as of August 2018)
+
+
+From the original repository:
+
 SPICEWORKS UNOFFICIAL EXTERNAL API
 This is a small script to authenticate a user to Spiceworks and then fetch some
 JSON API data from their Internal JSON API
